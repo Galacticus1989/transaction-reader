@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TransactionReader.Data;
@@ -17,10 +18,12 @@ namespace TransactionReader.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly TransationContext _context;
+        private readonly IMapper _mapper;
 
-        public TransactionsController(TransationContext context)
+        public TransactionsController(TransationContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -134,7 +137,8 @@ namespace TransactionReader.Controllers
         /// </summary>
         private string MapTransactionsToJson(IEnumerable<Transaction> transactions)
         {
-            var json = JsonSerializer.Serialize<IEnumerable<Transaction>>(transactions);
+            var mappedTransactions = _mapper.Map<IEnumerable<TransactionDTO>>(transactions);
+            var json = JsonSerializer.Serialize<IEnumerable<TransactionDTO>>(mappedTransactions);
             return json;
         }
     }
