@@ -30,6 +30,7 @@ namespace TransactionReader
             services.AddDbContext<TransationContext>(options => options.UseSqlServer(connectionString));
 
             services.AddRazorPages();
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,6 +57,7 @@ namespace TransactionReader
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }
