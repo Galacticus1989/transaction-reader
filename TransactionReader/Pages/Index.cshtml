@@ -6,5 +6,86 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p>Here you can get Transactions information using API methods:</p>
+
+    <table class="table" style="text-align: left;">
+        <tbody>
+            <tr>
+                <td>
+                    <a id="searchAll" class="btn btn-primary" style="color: #fff;">Get All</a>
+                </td>
+                <td>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a id="searchByCurrency" class="btn btn-secondary" style="color: #fff;">Get by Currency</a>
+                </td>
+                <td>
+                    <select id="SelectCurrency" name="SelectCurrency" class="form-control" style="width:80px;">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a id="searchByDateRange" class="btn btn-secondary" style="color: #fff;">Get by Date Range</a>
+                </td>
+                <td>
+                    <input type="text" id="js-daterangepicker" class="form-control" style="width:205px;" value="2018-10-20 - 2020-10-23"
+                           data-start-date="2018-10-20" data-end-date="2020-10-23">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a id="searchByStatus" class="btn btn-secondary" style="color: #fff;">Get by Status</a>
+                </td>
+                <td>
+                    <select id="SelectStatus" name="SelectStatus" class="form-control" style="width:150px;">
+                        <option value="A">Approved</option>
+                        <option value="R">Failed/Rejected</option>
+                        <option value="D">Finished/Done</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
 </div>
+
+<script type="text/javascript" src="https://htmlstream.com/preview/nova-v1.2/assets/vendor/daterangepicker/moment.min.js"></script>
+<script type="text/javascript" src="https://htmlstream.com/preview/nova-v1.2/assets/vendor/daterangepicker/daterangepicker.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        $('#searchAll').on('click', function (e) {
+            e.originalEvent.currentTarget.href = "/Transactions";
+        });
+
+        $('#searchByCurrency').on('click', function (e) {
+            e.originalEvent.currentTarget.href = "/Transactions/Currency?currency=" + $("#SelectCurrency").val();
+        });
+
+        $('#searchByDateRange').on('click', function (e) {
+            e.originalEvent.currentTarget.href = "/Transactions/DateRange?" +
+                "startDate=" + $('#js-daterangepicker').attr("data-start-date") +
+                "&endDate=" + $('#js-daterangepicker').attr("data-end-date");
+        });
+
+        $('#searchByStatus').on('click', function (e) {
+            e.originalEvent.currentTarget.href = "/Transactions/Status?status=" + $("#SelectStatus").val();
+        });
+
+        // initialization of daterangepicker
+        $('#js-daterangepicker').daterangepicker({
+            locale: {
+                format: 'YYYY-MM-DD'
+            }
+        }, function (start, end, label) {
+                $('#js-daterangepicker')
+                    .attr("data-start-date", start.format('YYYY-MM-DD'))
+                    .attr("data-end-date", end.format('YYYY-MM-DD'));
+        });
+    });
+</script>
