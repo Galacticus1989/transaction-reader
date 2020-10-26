@@ -1,0 +1,30 @@
+﻿@page
+@model TransactionReader.Pages.FileUploadModel
+@{
+    ViewData["Title"] = "File Upload";
+}
+
+<h2>Upload Transactions</h2>
+
+<p>The following form's page handler uploads the file and import new Transaction records to database.</p>
+
+<form enctype="multipart/form-data" method="post">
+    <dl>
+        <dt>
+            <label asp-for="FormFileUpload"></label>
+        </dt>
+        <dd>
+            <input asp-for="FormFileUpload" type="file" />
+            <span asp-validation-for="FormFileUpload"></span>
+        </dd>
+    </dl>
+    <input asp-page-handler="Upload" class="btn btn-primary" type="submit" value="Upload" />
+</form>
+
+<p class="result">
+    @Model.Result
+</p>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
