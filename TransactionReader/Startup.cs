@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using TransactionReader.Data;
 
 namespace TransactionReader
 {
@@ -23,6 +25,10 @@ namespace TransactionReader
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configuring a DbContext and connection to DB
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<TransationContext>(options => options.UseSqlServer(connectionString));
+
             services.AddRazorPages();
         }
 
