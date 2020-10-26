@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using TransactionReader.Data;
 using TransactionReader.Utilities.FileParser;
 
 namespace TransactionReader.Pages
@@ -20,12 +22,16 @@ namespace TransactionReader.Pages
         private readonly long _fileSizeLimit;
         private readonly string[] _permittedExtensions = { ".csv", ".xml" };
         private readonly IWebHostEnvironment _environment;
+        private readonly TransationContext _context;
+        private readonly ILogger<IndexModel> _logger;
 
-        public FileUploadModel(IConfiguration config, IWebHostEnvironment env)
+        public FileUploadModel(IConfiguration config, IWebHostEnvironment env, TransationContext context, ILogger<IndexModel> logger)
         {
             _fileSizeLimit = config.GetValue<long>("FileSizeLimit");
             _targetFilePath = config.GetValue<string>("StoredFilesPath");
             _environment = env;
+            _context = context;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -66,18 +72,22 @@ namespace TransactionReader.Pages
 
             var importer = FileImporter.Create(filePath, fileExtension);
             var result = importer.ParseTransactionFile();
+            DeleteFile(filePath);
 
             if (result.Failed)
             {
                 var invalidRecords = string.Join("; ", result.InvalidItems);
+                _logger.LogError(invalidRecords);
 
                 ModelState.AddModelError(originFileName, invalidRecords);
                 return BadRequest(ModelState);
             }
 
-            // TODO: add data to DB or log invalid records
+            // Insert into DB
+            AddNewTransactions(result);
 
-            return StatusCode(StatusCodes.Status200OK, "File uploaded to server");
+            return StatusCode(StatusCodes.Status200OK,
+                $"Added new {result.Results.Count()} record(s): {string.Join("; ", result.Results.Keys)}");
         }
 
         /// <summary>
@@ -129,6 +139,33 @@ namespace TransactionReader.Pages
             {
                 modelState.AddModelError("File", "The file extension is not permitted. Please use 'csv' or 'xml' format.");
             }
+        }
+
+        /// <summary>
+        /// Delete imported file since no need it anymore
+        /// </summary>
+        private void DeleteFile(string filePath)
+        {
+            try
+            {
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Insert new transactions into DB
+        /// </summary>
+        private void AddNewTransactions(FileParsingResult result)
+        {
+            _context.AddRange(result.Results.Values);
+            _context.SaveChanges();
         }
     }
 }
