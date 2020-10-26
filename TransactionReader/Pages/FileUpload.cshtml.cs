@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using TransactionReader.Utilities.FileParser;
 
 namespace TransactionReader.Pages
 {
@@ -55,13 +56,26 @@ namespace TransactionReader.Pages
             // use Path.GetRandomFileName to generate a safe random file name.
             var trustedFileNameForFileStorage = Path.GetRandomFileName();
             var filePath = Path.Combine(_environment.ContentRootPath, _targetFilePath, trustedFileNameForFileStorage);
+            var originFileName = FormFileUpload.FileName;
+            var fileExtension = Path.GetExtension(originFileName).ToLowerInvariant();
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
                 await FormFileUpload.CopyToAsync(fileStream);
             }
 
-            // TODO: parse file and save data to DB or log invalid records
+            var importer = FileImporter.Create(filePath, fileExtension);
+            var result = importer.ParseTransactionFile();
+
+            if (result.Failed)
+            {
+                var invalidRecords = string.Join("; ", result.InvalidItems);
+
+                ModelState.AddModelError(originFileName, invalidRecords);
+                return BadRequest(ModelState);
+            }
+
+            // TODO: add data to DB or log invalid records
 
             return StatusCode(StatusCodes.Status200OK, "File uploaded to server");
         }
@@ -113,7 +127,7 @@ namespace TransactionReader.Pages
             // Check extension
             if (!IsValidFileExtention(fileUpload.FileName, _permittedExtensions))
             {
-                modelState.AddModelError("File", "The file extension is not permitted.");
+                modelState.AddModelError("File", "The file extension is not permitted. Please use 'csv' or 'xml' format.");
             }
         }
     }
