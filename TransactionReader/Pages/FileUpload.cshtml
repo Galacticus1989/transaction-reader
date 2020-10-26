@@ -4,15 +4,14 @@
     ViewData["Title"] = "File Upload";
 }
 
-<h2>Upload Transactions</h2>
-
-<p>The following form's page handler uploads the file and import new Transaction records to database.</p>
+<div class="text-center">
+    <h1 class="display-4">Upload Transactions</h1>
+    <p>The following form's page handler uploads the file and import new Transaction records to database.</p>
+    <br/>
+</div>
 
 <form enctype="multipart/form-data" method="post">
     <dl>
-        <dt>
-            <label asp-for="FormFileUpload"></label>
-        </dt>
         <dd>
             <input asp-for="FormFileUpload" type="file" />
             <span asp-validation-for="FormFileUpload"></span>
