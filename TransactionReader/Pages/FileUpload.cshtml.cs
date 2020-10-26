@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 
@@ -43,7 +44,12 @@ namespace TransactionReader.Pages
                 return Page();
             }
 
-            // TODO: Add file validation
+            FileValidation(FormFileUpload, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             // For the file name of the uploaded file stored server-side,
             // use Path.GetRandomFileName to generate a safe random file name.
@@ -58,6 +64,57 @@ namespace TransactionReader.Pages
             // TODO: parse file and save data to DB or log invalid records
 
             return StatusCode(StatusCodes.Status200OK, "File uploaded to server");
+        }
+
+        /// <summary>
+        /// Check if file extantion is valid.
+        /// </summary>
+        private static bool IsValidFileExtention(string fileName, string[] permittedExtensions)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return false;
+            }
+
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(ext) || !permittedExtensions.Contains(ext))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validate the uploaded file.
+        /// </summary>
+        private void FileValidation(IFormFile fileUpload, ModelStateDictionary modelState)
+        {
+            if (fileUpload == null)
+            {
+                modelState.AddModelError("File", "The file is not selected.");
+                return;
+            }
+
+            // Check the file length.
+            if (fileUpload == null || fileUpload.Length == 0)
+            {
+                modelState.AddModelError("File", "The file is empty.");
+                return;
+            }
+
+            if (fileUpload.Length > _fileSizeLimit)
+            {
+                var megabyteSizeLimit = _fileSizeLimit / 1048576;
+                modelState.AddModelError("File", "The file size exceeds " + $"{megabyteSizeLimit:N1} MB.");
+            }
+
+            // Check extension
+            if (!IsValidFileExtention(fileUpload.FileName, _permittedExtensions))
+            {
+                modelState.AddModelError("File", "The file extension is not permitted.");
+            }
         }
     }
 }
